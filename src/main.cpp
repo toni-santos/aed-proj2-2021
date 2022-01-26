@@ -1,12 +1,12 @@
 #include <iostream>
-#include "../includes/Reader.h"
+#include "../includes/graph.h"
 
 int main() {
-	Reader reader;
+	Graph graph(2487, true);
 
-	reader.readStops();
-	reader.readLines();
-	reader.print();
+	graph.readLines();
+
+	//graph.print();
 
 	return 0;
 }
