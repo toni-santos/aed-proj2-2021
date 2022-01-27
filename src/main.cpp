@@ -4,9 +4,7 @@
 int main() {
 	Graph graph(2487, true);
 
-	graph.readLines();
-
-	//graph.print();
+	graph.print();
 
 	return 0;
 }

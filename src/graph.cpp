@@ -7,15 +7,16 @@
 #include "../includes/Utils.h"
 
 // Constructor: nr nodes and direction (default: undirected)
-Graph::Graph(int num, bool dir) : n(num), hasDir(dir), nodes(num) {}
+Graph::Graph(int num, bool dir) : n(num), hasDir(dir), nodes(num) {
+	readStops();
+	readLines();
+}
 
 // Add edge from source to destination with a certain weight
-void Graph::addEdge(int& dest, std::string& code, int distance) {
-	/*
+void Graph::addEdge(int& src, int& dest, std::string& code, double distance) {
 		if (src<1 || src>n || dest<1 || dest>n) return;
-		nodes[src].adj.push_back({dest, distance});
+		nodes[src].adj.push_back({src,dest, distance, code});
 		if (!hasDir) nodes[dest].adj.push_back({src, distance});
-    */
 }
 
 void Graph::readStops() {
@@ -35,7 +36,7 @@ void Graph::readStops() {
 
 		parsedLine = split(line, ',');
 
-		Stop stop = Stop(parsedLine.at(0), parsedLine.at(1), parsedLine.at(2), stod(parsedLine.at(3)), stod(parsedLine.at(4)));
+		Stop stop = Stop(parsedLine.at(1), parsedLine.at(0), parsedLine.at(2), stod(parsedLine.at(4)), stod(parsedLine.at(3)));
 		Node node {std::list<Edge>(), false, stop};
 		nods.push_back(node);
 	}
@@ -61,18 +62,24 @@ void Graph::readLines() {
 			continue;
 		}
 
+		getline(f, line);
+		if (line.empty()) continue;
+		std::string stopCode1 = line;
+		int src = findNodeIdx(stopCode1);
+		Node n1 = nodes.at(src);
+
 		while (f.good()) {
 			getline(f, line);
 			if (line.empty()) continue;
-			std::string stopCode1 = line;
-			Node n1 = nodes.at(findNodeIdx(stopCode1));
-
-			getline(f, line);
-			if (line.empty()) continue;
 			std::string stopCode2 = line;
+			int dest = findNodeIdx(stopCode2);
 			Node n2 = nodes.at(findNodeIdx(stopCode2));
 
 			double dist = haversine(n1.stop.getLatitude(), n1.stop.getLongitude(), n2.stop.getLatitude(), n2.stop.getLongitude());
+
+			addEdge(src, dest, lineCode, dist);
+			n1 = n2;
+			src = dest;
 		}
 
 		f.close();
@@ -80,19 +87,43 @@ void Graph::readLines() {
 
 }
 
+/*
+
+STOP_CODE	STOP_NAME	STOP_ZONE	LONG	LAT
+N_DEST		DIST	LINE_CODE
+N_DEST		DIST	LINE_CODE
+N_DEST		DIST	LINE_CODE
+N_DEST		DIST	LINE_CODE
+
+STOP_CODE	STOP_NAME	STOP_ZONE	LONG	LAT
+N_DEST		DIST	LINE_CODE
+N_DEST		DIST	LINE_CODE
+N_DEST		DIST	LINE_CODE
+
+STOP_CODE	STOP_NAME	STOP_ZONE	LONG	LAT
+N_DEST		DIST	LINE_CODE
+ N_DEST		DIST	LINE_CODE
+
+ */
+
 void Graph::print() {
+	/*
 	for (auto e: nodes) {
 		std::cout << e.stop.getName() << " " << e.stop.getCode() << " " << e.stop.getZone() << " " << e.stop.getLatitude() << " " << e.stop.getLongitude() << '\n' << std::flush;
 	}
-/*
-	for (auto line: this->lines) {
-		std::cout << line.code << " " << line.name << '\n' << std::flush;
-	}*/
+*/
+	for (auto e: nodes) {
+		for (auto i: e.adj){
+			if (i.code == "202") {
+				std::cout << e.stop.getCode() << '\n' << std::flush;
+			}
+		}
+	}
 }
 
 int Graph::findNodeIdx(std::string code) {
-	auto itr = std::find_if(nodes.cbegin(), nodes.cend(), [code](Node& n1){
-		return n1.stop.getCode() == code;
+	auto itr = std::find_if(nodes.cbegin(), nodes.cend(), [&code](Node n1){
+		return (n1.stop.getCode() == code);
 	});
 
 	if (itr != nodes.cend()) {

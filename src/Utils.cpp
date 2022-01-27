@@ -1,10 +1,7 @@
-//
-// Created by toni on 25/01/22.
-//
-
 #include <vector>
 #include <string>
-#include <math.h>
+#include <cmath>
+
 #include "../includes/Utils.h"
 
 std::vector<std::string> split(std::string str, char sep) {
@@ -24,7 +21,7 @@ std::vector<std::string> split(std::string str, char sep) {
 	return final;
 }
 
-static double haversine(double lat1, double lon1, double lat2, double lon2) {
+double haversine(double lat1, double lon1, double lat2, double lon2) {
 	double dLat = (lat2 - lat1) * M_PI / 180.0;
 	double dLon = (lon2 - lon1) * M_PI / 180.0;
 

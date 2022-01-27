@@ -1,5 +1,5 @@
-#ifndef _GRAPH_H_
-#define _GRAPH_H_
+#ifndef AED_PROJ2_2021_GRAPH_H
+#define AED_PROJ2_2021_GRAPH_H
 
 //#include "minHeap.h"
 #include "Stop.h"
@@ -10,9 +10,9 @@
 
 class Graph {
     struct Edge {
-		// int src				// Source node
+		int src;				// Source node
         int dest;   			// Destination node
-        int distance; 			// An integer weight
+        double distance; 			// Weight
 		std::string code; 		// Code of the Line
     };
 
@@ -30,7 +30,7 @@ public:
     Graph(int num, bool dir = false);
 
     // Add edge from source to destination with a certain weight
-    void addEdge(int& dest, std::string& code, int distance = 1);
+    void addEdge(int& src, int& dest, std::string& code, double distance = 1.0);
 
 	std::vector<Node> getNodes() { return nodes; };
 

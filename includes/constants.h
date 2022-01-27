@@ -9,6 +9,6 @@
 
 const std::string STOPS_FILE_PATH = "../dataset/lines-stops/stops.csv";
 const std::string LINES_FILE_PATH = "../dataset/lines-stops/lines.csv";
-const std::string LINE_FOLDER_PATH = "../dataset/lines/"
+const std::string LINE_FOLDER_PATH = "../dataset/lines/";
 
 #endif //AED_PROJ2_2021_CONSTANTS_H
