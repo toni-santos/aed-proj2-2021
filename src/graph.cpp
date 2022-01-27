@@ -15,8 +15,8 @@ Graph::Graph(int num, bool dir) : n(num), hasDir(dir), nodes(num) {
 // Add edge from source to destination with a certain weight
 void Graph::addEdge(int& src, int& dest, std::string& code, double distance) {
 		if (src<1 || src>n || dest<1 || dest>n) return;
-		nodes[src].adj.push_back({src,dest, distance, code});
-		if (!hasDir) nodes[dest].adj.push_back({src, distance});
+		nodes[src].adj.push_back({src, dest, distance, code});
+		if (!hasDir) nodes[dest].adj.push_back({src, dest, distance, code});
 }
 
 void Graph::readStops() {
@@ -131,6 +131,11 @@ int Graph::findNodeIdx(std::string code) {
 	} else {
 		return -1;
 	}
+}
+
+void Graph::populate() {
+	readStops();
+	readLines();
 }
 
 

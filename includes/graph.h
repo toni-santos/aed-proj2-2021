@@ -12,7 +12,7 @@ class Graph {
     struct Edge {
 		int src;				// Source node
         int dest;   			// Destination node
-        double distance; 			// Weight
+		double distance; 		// Weight
 		std::string code; 		// Code of the Line
     };
 
@@ -28,7 +28,7 @@ class Graph {
 public:
     // Constructor: nr nodes and direction (default: undirected)
     Graph(int num, bool dir = false);
-
+	Graph() {};
     // Add edge from source to destination with a certain weight
     void addEdge(int& src, int& dest, std::string& code, double distance = 1.0);
 
@@ -38,6 +38,7 @@ public:
 	void readLines();
 	void print();
 	int findNodeIdx(std::string code);
+	void populate();
 };
 
 
