@@ -40,5 +40,48 @@ const std::string RESET_FORMATTING = "";
  * @note May be implemented as an escape sequence or as a system call.
  */
 const std::string CLEAR_SCREEN = "\33[2J\33[H";
+/**
+ * @brief Turns any text that follows red.
+ *
+ * @note May be disabled.
+ */
+const std::string RED_TEXT = "\33[31m";
+/**
+ * @brief Turns any text that follows green.
+ *
+ * @note May be disabled.
+ */
+const std::string GREEN_TEXT = "\33[32m";
+/**
+ * @brief Hides any text that follows.
+ *
+ * @note May be disabled.
+ */
+const std::string CONCEAL_TEXT = "\33[8m";
+/**
+ * @brief Crosses out any text that follows.
+ *
+ * @note May be disabled.
+ */
+const std::string STRIKE_THROUGH = "\33[9m";
+/**
+ * @brief Disables the terminal cursor.
+ *
+ * @note May be disabled.
+ */
+const std::string DISABLE_CURSOR = "\33[?25l";
+/**
+ * @brief Enables the terminal cursor.
+ *
+ * @note May be disabled.
+ */
+const std::string ENABLE_CURSOR = "\33[?25h";
+/**
+ * @brief Resets any text that follows back to normal.
+ *
+ * @note May be disabled.
+ */
+const std::string RESET_FORMATTING = "\33[0m";
 #endif // NO_ANSI
-#endif //AED_PROJ2_2021_CONSTANTS_H
+
+#endif // AED_PROJ2_2021_CONSTANTS_H
