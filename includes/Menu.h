@@ -5,19 +5,11 @@
 #ifndef AED_PROJ2_2021_MENU_H
 #define AED_PROJ2_2021_MENU_H
 
+class Menu;
+
 #include "graph.h"
 
-enum State {
-    START,
-    DEPARTURE,
-    DESTINATION,
-    WALK,
-    COST,
-    BUS_CHANGES,
-    DISTANCE,
-    PLAN,
-    EXIT
-};
+enum State { START, DEPARTURE, DESTINATION, SELECTION, WALK, PLAN, EXIT };
 
 class Menu {
     Graph graph;
@@ -37,11 +29,8 @@ public:
     void show(State state);
     void departureMenu();
     void destinationMenu();
-    void costMenu();
     void walkMenu();
-    void changesMenu();
-    void distanceMenu();
-
+    void selectionMenu();
     void planMenu();
 };
 

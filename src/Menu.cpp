@@ -103,14 +103,8 @@ void Menu::show(State state) {
     case WALK:
         walkMenu();
         break;
-    case COST:
-        costMenu();
-        break;
-    case BUS_CHANGES:
-        changesMenu();
-        break;
-    case DISTANCE:
-        distanceMenu();
+    case SELECTION:
+        selectionMenu();
         break;
     case PLAN:
         planMenu();
@@ -146,14 +140,15 @@ void Menu::departureMenu() {
         this->depLongitude = getNumberInput(opts, -180, 180);
         break;
         // TODO: calculate stop code here?
-    case 2:
+    case 2: {
         prompt = "Insert the departure's stop code: ";
         std::cout << prompt;
         this->startCode = getInput(prompt);
-        pos = graph.findNodeIdx(startCode);
-        this->depLatitude = graph.getNodes().at(pos).stop.getLatitude();
-        this->depLongitude = graph.getNodes().at(pos).stop.getLongitude();
+        auto node = graph.getNode(startCode);
+        this->depLatitude = node.stop.getLatitude();
+        this->depLongitude = node.stop.getLongitude();
         break;
+    }
     case 0:
         show(START);
         return;
@@ -174,7 +169,6 @@ void Menu::destinationMenu() {
     unsigned opt = getNumberInput(opts, 0, 2);
 
     std::string prompt{""};
-    int pos{};
 
     switch (opt) {
     case 1:
@@ -187,14 +181,15 @@ void Menu::destinationMenu() {
         this->destLongitude = getNumberInput(opts, -180, 180);
         break;
         // TODO: calculate stop code here?
-    case 2:
+    case 2: {
         prompt = "Insert the destination's stop code: ";
         std::cout << prompt;
         this->endCode = getInput(prompt);
-        pos = graph.findNodeIdx(endCode);
-        this->destLongitude = graph.getNodes().at(pos).stop.getLongitude();
-        this->destLatitude = graph.getNodes().at(pos).stop.getLatitude();
+        auto node = graph.getNode(endCode);
+        this->destLongitude = node.stop.getLongitude();
+        this->destLatitude = node.stop.getLatitude();
         break;
+    }
     case 0:
         show(START);
         return;
@@ -205,53 +200,32 @@ void Menu::destinationMenu() {
 
 void Menu::walkMenu() {
     std::cout << CLEAR_SCREEN << std::flush;
-    std::string prompt =
-        "Insert a distance you'd be comfortable walking (default: 50(m)): ";
+    std::string prompt = "Insert a distance you'd be comfortable walking (m): ";
     std::cout << prompt << std::flush;
 
     walk = getNumberInput(prompt, 0, std::numeric_limits<int>::max());
 
-    show(COST);
+    show(SELECTION);
 }
 
-void Menu::costMenu() {
+void Menu::selectionMenu() {
     std::cout << CLEAR_SCREEN << std::flush;
-    std::string prompt = "Would you like to minimize costs (N/y)? ";
-    std::cout << prompt << std::flush;
+    std::string prompt = "Choose how you'd like to plan your trip: \n\n"
+                         "1 - Minimize cost\n"
+                         "2 - Minimize bus changes\n"
+                         "3 - Minimize cost\n";
+    int opt = getNumberInput(prompt, 1, 3);
 
-    std::string opt = getInput(prompt);
-
-    if (opt == "Y" || opt == "y") {
+    switch (opt) {
+    case 1:
         this->cost = true;
-    }
-
-    show(BUS_CHANGES);
-}
-
-void Menu::changesMenu() {
-    std::cout << CLEAR_SCREEN << std::flush;
-    std::string prompt = "Would you like to minimize bus changes (N/y)? ";
-    std::cout << prompt << std::flush;
-
-    std::string opt = getInput(prompt);
-
-    if (opt == "Y" || opt == "y") {
+        break;
+    case 2:
         this->changes = true;
-    }
-
-    show(DISTANCE);
-}
-
-void Menu::distanceMenu() {
-    std::cout << CLEAR_SCREEN << std::flush;
-    std::string prompt =
-        "Would you like to minimize the overall distance (N/y)? ";
-    std::cout << prompt << std::flush;
-
-    std::string opt = getInput(prompt);
-
-    if (opt == "Y" || opt == "y") {
+        break;
+    case 3:
         this->minDistance = true;
+        break;
     }
 
     show(PLAN);

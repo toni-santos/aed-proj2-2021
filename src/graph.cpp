@@ -13,12 +13,17 @@ Graph::Graph(int num, bool dir) : n(num), hasDir(dir), nodes(num) {
 }
 
 // Add edge from source to destination with a certain weight
-void Graph::addEdge(int &src, int &dest, std::string &code, double distance) {
-    if (src < 1 || src > n || dest < 1 || dest > n)
-        return;
-    nodes[src].adj.push_back({src, dest, distance, code});
+void Graph::addEdge(Node &src, Node &dest, const std::string &code,
+                    const double &distance) {
+    src.adj.push_back({dest.stop.getCode(), distance, code});
     if (!hasDir)
-        nodes[dest].adj.push_back({src, dest, distance, code});
+        dest.adj.push_back({src.stop.getCode(), distance, code});
+}
+
+// Add edge from source to destination with a certain weight
+void Graph::addEdge(const std::string &src, const std::string &dest,
+                    const std::string &code, const double &distance) {
+    addEdge(nodes[src], nodes[dest], code, distance);
 }
 
 void Graph::readStops() {
@@ -28,7 +33,6 @@ void Graph::readStops() {
         return;
 
     std::string line;
-    std::vector<Node> nods;
 
     getline(stopsFile, line);
 
@@ -42,13 +46,11 @@ void Graph::readStops() {
 
         Stop stop = Stop(parsedLine.at(1), parsedLine.at(0), parsedLine.at(2),
                          stod(parsedLine.at(4)), stod(parsedLine.at(3)));
-        Node node{std::list<Edge>(), false, 0, -1, stop};
-        nods.push_back(node);
+        Node node{stop};
+        nodes.emplace(stop.getCode(), node);
     }
 
     stopsFile.close();
-
-    this->nodes = nods;
 }
 
 void Graph::readLines() {
@@ -59,87 +61,31 @@ void Graph::readLines() {
 
         if (f.fail())
             continue;
-        std::string line;
 
-        getline(f, line);
-        if (line == "0") {
-            f.close();
-            continue;
-        }
+        std::string stops;
+        getline(f, stops);
+        int nstops = std::stoi(stops);
 
-        getline(f, line);
-        if (line.empty())
-            continue;
-        std::string stopCode1 = line;
-        int src = findNodeIdx(stopCode1);
-        Node n1 = nodes.at(src);
+        std::string stop;
+        Node current;
+        Node last;
 
-        while (f.good()) {
-            getline(f, line);
-            if (line.empty())
-                continue;
-            std::string stopCode2 = line;
-            int dest = findNodeIdx(stopCode2);
-            Node n2 = nodes.at(findNodeIdx(stopCode2));
+        for (int i{0}; i < nstops; ++i) {
+            getline(f, stop);
+            current = getNode(stop);
 
-            double dist =
-                haversine(n1.stop.getLatitude(), n1.stop.getLongitude(),
-                          n2.stop.getLatitude(), n2.stop.getLongitude());
+            if (i > 0) {
+                double dist = haversine(
+                    current.stop.getLatitude(), current.stop.getLongitude(),
+                    last.stop.getLatitude(), last.stop.getLongitude());
 
-            addEdge(src, dest, lineCode, dist);
-            n1 = n2;
-            src = dest;
+                addEdge(last, current, lineCode, dist);
+            }
+
+            last = current;
         }
 
         f.close();
-    }
-}
-
-/*
-
-STOP_CODE   STOP_NAME   STOP_ZONE	LONG	LAT
-N_DEST      DIST        LINE_CODE
-N_DEST      DIST        LINE_CODE
-N_DEST      DIST        LINE_CODE
-N_DEST      DIST        LINE_CODE
-
-STOP_CODE   STOP_NAME   STOP_ZONE   LONG    LAT
-N_DEST      DIST        LINE_CODE
-N_DEST      DIST        LINE_CODE
-N_DEST      DIST        LINE_CODE
-
-STOP_CODE   STOP_NAME   STOP_ZONE   LONG    LAT
-N_DEST      DIST        LINE_CODE
-N_DEST      DIST        LINE_CODE
-
- */
-
-void Graph::print() {
-    /*
-    for (auto e: nodes) {
-        std::cout << e.stop.getName() << " " << e.stop.getCode() << " " <<
-    e.stop.getZone() << " " << e.stop.getLatitude() << " " <<
-    e.stop.getLongitude() << '\n' << std::flush;
-    }
-*/
-    for (auto e : nodes) {
-        for (auto i : e.adj) {
-            if (i.code == "202") {
-                std::cout << e.stop.getCode() << '\n' << std::flush;
-            }
-        }
-    }
-}
-
-int Graph::findNodeIdx(std::string code) {
-    auto itr = std::find_if(nodes.cbegin(), nodes.cend(), [&code](Node n1) {
-        return (n1.stop.getCode() == code);
-    });
-
-    if (itr != nodes.cend()) {
-        return std::distance(nodes.cbegin(), itr);
-    } else {
-        return -1;
     }
 }
 
@@ -148,51 +94,55 @@ void Graph::populate() {
     readLines();
 }
 
-void Graph::dijkstra(int s) {
-    MinHeap<int, double> q(n, -1);
+void Graph::dijkstra(const std::string &s) {
+    MinHeap<std::string, double> q(n, "");
 
-    for (int v = 1; v <= n; v++) {
-        nodes[v].dist = INF;
-        q.insert(v, INF);
-        nodes[v].visited = false;
+    for (auto i{nodes.begin()}, end{nodes.end()}; i != end; ++i) {
+        i->second.dist = INF;
+        q.insert(i->first, INF);
+        i->second.visited = false;
     }
 
     nodes[s].dist = 0;
     q.decreaseKey(s, 0);
     nodes[s].pred = s;
+
     while (q.getSize() > 0) {
-        int u = q.removeMin();
+        std::string uc = q.removeMin();
+        Node u = getNode(uc);
         // cout << "Node " << u << " with dist = " << nodes[u].dist << endl;
-        nodes[u].visited = true;
-        for (auto e : nodes[u].adj) {
-            int v = e.dest;
-            int w = e.distance;
-            if (!nodes[v].visited && nodes[u].dist + w < nodes[v].dist) {
-                nodes[v].dist = nodes[u].dist + w;
-                q.decreaseKey(v, nodes[v].dist);
-                nodes[v].pred = u;
+        u.visited = true;
+        for (auto e : u.adj) {
+            std::string vc = e.dest;
+            Node v = getNode(vc);
+            int w = u.dist + e.distance;
+            if (!v.visited && w < v.dist) {
+                v.dist = w;
+                q.decreaseKey(vc, v.dist);
+                v.pred = uc;
             }
         }
     }
 }
 
-int Graph::dijkstra_distance(int a, int b) {
+int Graph::dijkstra_distance(const std::string &a, const std::string &b) {
     dijkstra(a);
     if (nodes[b].dist == INF)
         return -1;
     return nodes[b].dist;
 }
 
-list<int> Graph::dijkstra_path(int a, int b) {
+auto Graph::dijkstra_path(const std::string &a, const std::string &b)
+    -> std::list<Node> {
     dijkstra(a);
-    list<int> path;
+    std::list<Node> path;
     if (nodes[b].dist == INF)
         return path;
-    path.push_back(b);
-    int v = b;
+    path.push_back(getNode(b));
+    std::string v = b;
     while (v != a) {
         v = nodes[v].pred;
-        path.push_front(v);
+        path.push_front(getNode(v));
     }
     return path;
 }

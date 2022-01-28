@@ -1,6 +1,8 @@
 #ifndef AED_PROJ2_2021_STOP_H
 #define AED_PROJ2_2021_STOP_H
 
+class Stop;
+
 #include <string>
 
 class Stop {
@@ -15,11 +17,11 @@ public:
         : name(name), code(code), zone(zone), longitude(longitude),
           latitude(latitude){};
 
-    std::string getName() { return this->name; }
-    std::string getCode() { return this->code; }
-    std::string getZone() { return this->zone; }
-    double getLongitude() { return this->longitude; }
-    double getLatitude() { return this->latitude; }
+    std::string getName() const { return this->name; }
+    std::string getCode() const { return this->code; }
+    std::string getZone() const { return this->zone; }
+    double getLongitude() const { return this->longitude; }
+    double getLatitude() const { return this->latitude; }
 };
 
 #endif // AED_PROJ2_2021_STOP_H
