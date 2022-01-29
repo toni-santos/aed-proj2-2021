@@ -1,10 +1,13 @@
+#include <iostream>
+
 #include "../includes/Menu.h"
+#include "../includes/Trip.h"
 #include "../includes/Utils.h"
 #include "../includes/graph.h"
-#include <iostream>
 
 int main() {
     Graph graph{};
+    Trip trip{};
     UserInterface ui{};
 
     std::cout << "Loading..." << std::endl;
@@ -18,7 +21,7 @@ int main() {
 
     try {
         while (true) {
-            ui.show(graph);
+            ui.show(graph, trip);
         }
     } catch (Exit) {
         ui.exit();

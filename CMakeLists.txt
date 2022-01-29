@@ -10,6 +10,7 @@ add_executable(aed_proj2_2021
                src/filters.cpp
                src/graph.cpp 
                src/Menu.cpp
+               src/Trip.cpp
                src/Utils.cpp)
 
 add_executable(aed_proj2_2021_no_ansi
@@ -17,6 +18,7 @@ add_executable(aed_proj2_2021_no_ansi
                 src/filters.cpp
                 src/graph.cpp 
                 src/Menu.cpp
+                src/Trip.cpp
                 src/Utils.cpp)
 target_compile_definitions(aed_proj2_2021_no_ansi PUBLIC NO_ANSI)
 

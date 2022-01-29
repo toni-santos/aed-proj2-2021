@@ -6,28 +6,9 @@
 #include "../includes/Menu.h"
 #include "../includes/Utils.h"
 #include "../includes/constants.h"
-// #include "../includes/filters.h"
-
-void UserInterface::startMenu() {
-    unsigned input = getUnsignedInput("(1) Plan\n"
-                                      "(0) Exit\n\n",
-                                      0, 1);
-
-    switch (input) {
-    case 0:
-        currentMenu = EXIT;
-        break;
-    case 1:
-        currentMenu = DEPARTURE;
-        break;
-    }
-}
 
 void UserInterface::optionsMenu(
-    const std::string &text,
     const std::vector<std::pair<std::string, Menu>> &options) {
-    std::cout << CLEAR_SCREEN << text << "\n\n";
-
     for (int i{1}; i < options.size(); ++i) {
         std::cout << "(" << i << ") " << options.at(i).first << std::endl;
     }
@@ -100,11 +81,6 @@ std::string UserInterface::getStringInput(std::string prompt) {
     return input;
 }
 
-void UserInterface::exit() {
-    std::cout << CLEAR_SCREEN << std::flush;
-    std::cout << "Shutting down..." << std::endl;
-}
-
 bool UserInterface::inRange(unsigned long n, unsigned long min,
                             unsigned long max) {
     bool b = (n <= max) && (n >= min);
@@ -124,30 +100,36 @@ bool UserInterface::inRange(double n, double min, double max) {
     return b;
 }
 
-void UserInterface::show(Graph &graph) {
+void UserInterface::show(Graph &graph, Trip &trip) {
     std::cout << CLEAR_SCREEN << PROGRAM_NAME << '\n' << std::endl;
 
     switch (currentMenu) {
-    case START:
-        startMenu();
+    case MAIN:
+        mainMenu(trip);
         break;
-    case DEPARTURE:
-        departureMenu(graph);
+    case SOURCE:
+        sourceMenu(graph, trip);
         break;
     case DESTINATION:
-        destinationMenu(graph);
+        destinationMenu(graph, trip);
         break;
-    case WALK:
-        walkMenu();
+    case STRATEGY:
+        strategyMenu(trip);
         break;
-    case SELECTION:
-        selectionMenu();
+    case WALK_DISTANCE:
+        walkDistanceMenu(trip);
         break;
     case NIGHT:
-        nightMenu();
+        nightMenu(trip);
+        break;
+    case TOGGLE_LINES:
+        toggleLinesMenu(trip);
+        break;
+    case TOGGLE_STOPS:
+        toggleStopsMenu(trip);
         break;
     case PLAN:
-        planMenu(graph);
+        planMenu(graph, trip);
         break;
     case EXIT:
         throw Exit();
@@ -155,7 +137,26 @@ void UserInterface::show(Graph &graph) {
     }
 }
 
-void UserInterface::departureMenu(Graph &graph) {
+void UserInterface::exit() {
+    std::cout << CLEAR_SCREEN << std::flush;
+    std::cout << "Shutting down..." << std::endl;
+}
+
+void UserInterface::mainMenu(Trip &trip) {
+    std::cout << trip << '\n';
+
+    optionsMenu({{"Exit", EXIT},
+                 {"Set starting point", SOURCE},
+                 {"Set destination point", DESTINATION},
+                 {"Set strategy", STRATEGY},
+                 {"Set max walking distance", WALK_DISTANCE},
+                 {"Set scheduling preferences", NIGHT},
+                 {"Close/open lines", TOGGLE_LINES},
+                 {"Close/open stops", TOGGLE_STOPS},
+                 {"Calculate path", PLAN}});
+}
+
+void UserInterface::sourceMenu(Graph &graph, Trip &trip) {
     unsigned opt = getUnsignedInput("(1) Coordinates\n"
                                     "(2) Stop\n"
                                     "(0) Go back\n\n"
@@ -171,21 +172,18 @@ void UserInterface::departureMenu(Graph &graph) {
             getDoubleInput("Insert your longitude value: ", -180., 180.);
 
         graph.setStart(depLatitude, depLongitude);
-        startCode = "START";
+        trip.setSource("START");
         break;
     }
     case 2:
-        startCode = getStringInput("Insert the departure's stop code: ");
+        trip.setSource(getStringInput("Insert the departure's stop code: "));
         break;
-    case 0:
-        currentMenu = START;
-        return;
     }
 
-    currentMenu = DESTINATION;
+    currentMenu = MAIN;
 }
 
-void UserInterface::destinationMenu(Graph &graph) {
+void UserInterface::destinationMenu(Graph &graph, Trip &trip) {
     unsigned opt = getUnsignedInput("(1) Coordinates\n"
                                     "(2) Stop\n"
                                     "(0) Go back\n\n"
@@ -201,37 +199,39 @@ void UserInterface::destinationMenu(Graph &graph) {
             "Insert the destination's longitude value: ", -180., 180.);
 
         graph.setEnd(destLatitude, destLongitude);
-        endCode = "END";
+        trip.setDestination("END");
         break;
     }
     case 2:
-        endCode = getStringInput("Insert the destination's stop code: ");
+        trip.setDestination(
+            getStringInput("Insert the destination's stop code: "));
         break;
-    case 0:
-        currentMenu = START;
-        return;
     }
 
-    currentMenu = WALK;
+    currentMenu = MAIN;
 }
 
-void UserInterface::walkMenu() {
-    walk = getDoubleInput(
-        "Insert a distance you'd be comfortable walking (m): ", 0);
+void UserInterface::walkDistanceMenu(Trip &trip) {
+    trip.setMaxWalkDistance(getDoubleInput(
+        "Insert a distance you'd be comfortable walking (m): ", 0));
 
-    currentMenu = NIGHT;
+    currentMenu = MAIN;
 }
 
-void UserInterface::nightMenu() {
-    std::string opt = getStringInput("Will you be travelling at night (N/y): ");
+void UserInterface::nightMenu(Trip &trip) {
+    int opt = getUnsignedInput("(1) Avoid night only lines\n"
+                               "(2) Avoid day only lines\n"
+                               "(3) Don't avoid any lines\n\n"
+                               "Choose your scheduling preference: ",
+                               1, 3);
 
-    if (opt == "Y" || opt == "y")
-        night = true;
+    trip.setDay(opt & 0b01);
+    trip.setNight(opt & 0b10);
 
-    currentMenu = SELECTION;
+    currentMenu = MAIN;
 }
 
-void UserInterface::selectionMenu() {
+void UserInterface::strategyMenu(Trip &trip) {
     int opt = getUnsignedInput("(1) Minimize cost\n"
                                "(2) Minimize bus changes\n"
                                "(3) Minimize distance\n"
@@ -239,34 +239,85 @@ void UserInterface::selectionMenu() {
                                "Choose how you'd like to plan your trip: ",
                                1, 4);
 
-    option = (Option)(opt - 1);
+    trip.setStrategy(static_cast<Strategy>(opt - 1));
 
-    currentMenu = PLAN;
+    currentMenu = MAIN;
 }
 
-void UserInterface::planMenu(Graph &graph) {
-    filter f =
-        compositeFilter({walkingFilter(walk), nightFilter(!night, true)});
+void UserInterface::toggleLinesMenu(Trip &trip) {
+    if (trip.getClosedLines().size()) {
+        std::cout << "Currently closed lines:\n";
 
-    switch (option) {
+        for (const std::string &line : trip.getClosedLines())
+            std::cout << '\t' << line << '\n';
+
+        std::cout << '\n';
+    }
+
+    while (true) {
+        std::string input = getStringInput("Enter line to toggle: ");
+
+        if (input == "")
+            break;
+
+        trip.toggleLine(input);
+
+        std::cout << '\n';
+    }
+
+    currentMenu = MAIN;
+}
+
+void UserInterface::toggleStopsMenu(Trip &trip) {
+    if (trip.getClosedStops().size()) {
+        std::cout << "Currently closed stops:\n";
+
+        for (const std::string &stop : trip.getClosedStops())
+            std::cout << '\t' << stop << '\n';
+
+        std::cout << '\n';
+    }
+
+    while (true) {
+        std::string input = getStringInput("Enter stop to toggle: ");
+
+        if (input == "")
+            break;
+
+        trip.toggleStop(input);
+
+        std::cout << '\n';
+    }
+
+    currentMenu = MAIN;
+}
+
+void UserInterface::planMenu(Graph &graph, Trip &trip) {
+    std::list<Node> path{};
+
+    switch (trip.getStrategy()) {
     case MIN_COST:
         // zone changes
-        path = graph.dijkstraCostPath(startCode, endCode, f);
+        path = graph.dijkstraCostPath(trip.getSource(), trip.getDestination(),
+                                      trip.getFilter());
         break;
 
     case MIN_CHANGES:
         // bus changes
-        path = graph.dijkstraLinesPath(startCode, endCode, f);
+        path = graph.dijkstraLinesPath(trip.getSource(), trip.getDestination(),
+                                       trip.getFilter());
         break;
 
     case MIN_DISTANCE:
         // normal dijkstra
-        path = graph.dijkstraPath(startCode, endCode, f);
+        path = graph.dijkstraPath(trip.getSource(), trip.getDestination(),
+                                  trip.getFilter());
         break;
 
     case MIN_STOPS:
         // stop changes (dfs)
-        path = graph.bfsPath(startCode, endCode, f);
+        path = graph.bfsPath(trip.getSource(), trip.getDestination(),
+                             trip.getFilter());
         break;
     }
 
@@ -276,5 +327,5 @@ void UserInterface::planMenu(Graph &graph) {
 
     getStringInput("\nPress Enter to continue...\n");
 
-    currentMenu = START;
+    currentMenu = MAIN;
 }

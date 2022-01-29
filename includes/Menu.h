@@ -7,6 +7,7 @@
 
 class UserInterface;
 
+#include "Trip.h"
 #include "graph.h"
 
 /**
@@ -16,12 +17,12 @@ enum Menu {
     /**
      * @brief Displays an initial menu to start the program.
      */
-    START,
+    MAIN,
     /**
      * @brief Displays a menu to specify the departure (by a stop code or
      * coordinates).
      */
-    DEPARTURE,
+    SOURCE,
     /**
      * @brief Displays a menu to specify the destination (by a stop code or
      * coordinates).
@@ -31,16 +32,18 @@ enum Menu {
      * @brief Displays a menu to specify by what constraints to optimize the
      * calculated path.
      */
-    SELECTION,
+    STRATEGY,
     /**
      * @brief Displays a menu to specify a walking distance between stops the
      * user is comfortable with.
      */
-    WALK,
+    WALK_DISTANCE,
     /**
      * @brief Displays a menu to specify if travel is done solely by night.
      */
     NIGHT,
+    TOGGLE_LINES,
+    TOGGLE_STOPS,
     /**
      * @brief Calculates and displays the path.
      */
@@ -49,28 +52,6 @@ enum Menu {
      * @brief Exits the program.
      */
     EXIT
-};
-
-/**
- * @brief Holds the possible ways to calculate a path.
- */
-enum Option {
-    /**
-     * @brief Generates a path passing through the minimum amount of zones.
-     */
-    MIN_COST,
-    /**
-     * @brief Generates a path passing through the minimum amount of lines.
-     */
-    MIN_CHANGES,
-    /**
-     * @brief Generates a path with the least amount of distance.
-     */
-    MIN_DISTANCE,
-    /**
-     * @brief Generates a path passing through the minimum amount of stops.
-     */
-    MIN_STOPS
 };
 
 /**
@@ -89,39 +70,6 @@ class UserInterface {
     std::string errorMessage{};
 
     /**
-     * @brief The code of the initial stop (closest to the given coordinates or
-     * given by user input).
-     */
-    std::string startCode;
-
-    /**
-     * @brief The code of the initial stop (closest to the given coordinates or
-     * given by user input).
-     */
-    std::string endCode;
-
-    /**
-     * @brief The constraint by which the user wishes to optimize their path.
-     */
-    Option option;
-
-    /**
-     * @brief The distance the user is comfortable walking.
-     */
-    double walk;
-
-    /**
-     * @brief The Nodes that constitute the found path.
-     */
-    std::list<Node> path{};
-
-    /**
-     * @brief Specifies if the user is travelling by night (limiting available
-     * lines to nocturnal ones).
-     */
-    bool night;
-
-    /**
      * @brief Helper method to show a menu with options.
      *
      * @details Each option string will be shown along with its index on the
@@ -131,11 +79,9 @@ class UserInterface {
      * @note The first option on the list will be shown last and is
      *       intended to be a way to go back in the navigation tree.
      *
-     * @param text Text to show before the options
      * @param options The list of options to show
      */
-    void optionsMenu(const std::string &text,
-                     const std::vector<std::pair<std::string, Menu>> &options);
+    void optionsMenu(const std::vector<std::pair<std::string, Menu>> &options);
 
     /**
      * @brief Tries to transform a string into an unsigned integer, displaying
@@ -207,41 +153,44 @@ class UserInterface {
     /**
      * @brief Displays an initial menu to start the program.
      */
-    void startMenu();
+    void mainMenu(Trip &trip);
 
     /**
      * @brief Displays a menu to specify the departure (by a stop code or
      * coordinates).
      */
-    void departureMenu(Graph &graph);
+    void sourceMenu(Graph &graph, Trip &trip);
 
     /**
      * @brief Displays a menu to specify the destination (by a stop code or
      * coordinates).
      */
-    void destinationMenu(Graph &graph);
-
-    /**
-     * @brief Displays a menu to specify a walking distance between stops the
-     * user is comfortable with.
-     */
-    void walkMenu();
-
-    /**
-     * @brief Displays a menu to specify if travel is done solely by night.
-     */
-    void nightMenu();
+    void destinationMenu(Graph &graph, Trip &trip);
 
     /**
      * @brief Displays a menu to specify by what constraints to optimize the
      * calculated path.
      */
-    void selectionMenu();
+    void strategyMenu(Trip &trip);
+
+    /**
+     * @brief Displays a menu to specify a walking distance between stops the
+     * user is comfortable with.
+     */
+    void walkDistanceMenu(Trip &trip);
+
+    /**
+     * @brief Displays a menu to specify if travel is done solely by night.
+     */
+    void nightMenu(Trip &trip);
+
+    void toggleLinesMenu(Trip &trip);
+    void toggleStopsMenu(Trip &trip);
 
     /**
      * @brief Calculates and displays the path.
      */
-    void planMenu(Graph &graph);
+    void planMenu(Graph &graph, Trip &trip);
 
 public:
     /**
@@ -249,7 +198,7 @@ public:
      *
      * @param graph The graph.
      */
-    void show(Graph &graph);
+    void show(Graph &graph, Trip &trip);
     /**
      * @brief Shows a message before the program exits.
      */
