@@ -18,57 +18,166 @@ struct Node;
 
 #define INF (std::numeric_limits<double>::max() / 2)
 
+/**
+ * @brief Represents an edge connecting two nodes.
+ */
 struct Edge {
-    std::string dest; // Destination node
-    double distance;  // Weight
-    std::string code; // Code of the Line
+    /**
+     * @brief The destination node.
+     */
+    std::string dest;
+    /**
+     * @brief The distance between the two nodes.
+     */
+    double distance;
+    /**
+     * @brief The line code associated with this edge.
+     */
+    std::string code;
 };
 
+/**
+ * @brief Represents a node in a Graph.
+ */
 struct Node {
-    std::deque<Edge> adj{}; // The list of outgoing edges (to adjacent nodes)
+    /**
+     * @brief The outgoing edges connecting this node to others.
+     */
+    std::deque<Edge> adj{};
+    /**
+     * @brief Whether this node has been visited.
+     *
+     * @note Set after running an algorithm.
+     */
     bool visited{false};
+    /**
+     * @brief The distance between this node and its predecessor.
+     *
+     * @note Set after running an algorithm.
+     */
     double dist{};
+    /**
+     * @brief This node's predecessor.
+     *
+     * @note Set after running an algorithm.
+     */
     std::string pred{};
+    /**
+     * @brief This node's line.
+     *
+     * @note Set after running an algorithm.
+     *
+     */
     std::string line{};
+    /**
+     * @brief The stop associated with this node.
+     */
     Stop stop{};
 
+    /**
+     * @brief Creates a new node for the specified stop.
+     *
+     * @param stop The stop
+     */
     Node(Stop stop) : stop(stop) {}
+    /**
+     * @brief Default constructor.
+     */
     Node() {}
 };
 
+/**
+ * @brief A directed multigraph representing a public transit network.
+ */
 class Graph {
-    int n;       // Graph size (vertices are numbered from 1 to n)
-    bool hasDir; // false: undirected; true: directed
-    // std::vector<Node> nodes; // The list of nodes being represented
+    /**
+     * @brief This graph's nodes.
+     *
+     * The keys are each node's stop code and the values are the nodes
+     * themselves.
+     */
     std::unordered_map<std::string, Node> nodes;
 
+    /**
+     * @brief Reads the stops (nodes) from file.
+     */
+    void readStops();
+    /**
+     * @brief Reads the lines (edges) from file.
+     */
+    void readLines();
+    /**
+     * @brief Adds all by foot edges between every node.
+     */
     void addFootEdges();
 
 public:
-    // Constructor: nr nodes and direction (default: undirected)
-    Graph(int num, bool dir = false);
+    /**
+     * @brief Creates an empty graph.
+     */
     Graph(){};
-    // Add edge from source to destination with a certain weight fred
+
+    /**
+     * @brief Adds a new edge between two nodes with the specified distance and
+     *        code.
+     *
+     * @param src The code of source node.
+     * @param dest The code of the destination node.
+     * @param code The line code.
+     * @param distance The distance between the nodes.
+     */
     void addEdge(const std::string &src, const std::string &dest,
                  const std::string &code, const double &distance = 1.0);
+    /**
+     * @brief Adds a new edge between two nodes with the specified distance and
+     *        code.
+     *
+     * @param src The source node.
+     * @param dest The destination node.
+     * @param code The line code.
+     * @param distance The distance between the nodes.
+     */
     void addEdge(Node &src, Node &dest, const std::string &code,
                  const double &distance = 1.0);
 
-    // std::vector<Node> getNodes() { return nodes; };
+    /**
+     * @return This graph's nodes.
+     */
     std::unordered_map<std::string, Node> &getNodes() { return nodes; };
+    /**
+     * @brief Get the node with the specified code.
+     *
+     * @param id The stop code.
+     * @return The node.
+     */
     Node &getNode(const std::string &id) { return nodes.at(id); };
 
+    /**
+     * @brief Creates a node with the code START_NODE, the name
+     *        START_NODE_NAME and the specified position and calculates all by
+     *        foot edges from this node.
+     *
+     * @param lat The latitude of the start node.
+     * @param lon The longitude of the start node.
+     */
     void setStart(const double &lat, const double &lon);
+    /**
+     * @brief Creates a node with the code END_NODE, the name
+     *        END_NODE_NAME and the specified position and calculates all by
+     *        foot edges to this node.
+     *
+     * @param lat The latitude of the end node.
+     * @param lon The longitude of the end node.
+     */
     void setEnd(const double &lat, const double &lon);
 
-    void readStops();
-    void readLines();
-    // int findNodeIdx(std::string code);
+    /**
+     * @brief Populates this graph with info from files and by foot edges.
+     */
     void populate();
 
     void dijkstra(const std::string &src, const std::string &dest,
                   const filter &f);
-    // int dijkstraDistance(const std::string &a, const std::string &b);
     std::list<Node> dijkstraPath(const std::string &src,
                                  const std::string &dest, const filter &f);
 

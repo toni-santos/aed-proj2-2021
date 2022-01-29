@@ -8,92 +8,86 @@
 #include "../includes/constants.h"
 // #include "../includes/filters.h"
 
-Menu::Menu() {}
-
-void Menu::startMenu() {
-
-#ifdef TONI
-    time_t now = time(NULL);
-    struct tm *now_tm = localtime(&now);
-    night = (now_tm->tm_hour >= 23 || now_tm->tm_hour <= 5);
-#else
-    night = false;
-#endif
-
-    std::string logo = R"(
-          /$$$$$$  /$$$$$$$$ /$$$$$$  /$$$$$$$  /$$
-         /$$__  $$|__  $$__//$$__  $$| $$__  $$| $$
-        | $$  \__/   | $$  | $$  \__/| $$  \ $$| $$  /$$$$$$  /$$$$$$$
-        |  $$$$$$    | $$  | $$      | $$$$$$$/| $$ |____  $$| $$__  $$
-         \____  $$   | $$  | $$      | $$____/ | $$  /$$$$$$$| $$  \ $$
-         /$$  \ $$   | $$  | $$    $$| $$      | $$ /$$__  $$| $$  | $$
-        |  $$$$$$/   | $$  |  $$$$$$/| $$      | $$|  $$$$$$$| $$  | $$
-         \______/    |__/   \______/ |__/      |__/ \_______/|__/  |__/
-
-
-                ----------------------------------------------
-                |                                            |
-                |                (1) Plan                    |
-                |                (0) Exit                    |
-                |                                            |
-                ----------------------------------------------
-
-    )";
-
-    std::cout << CLEAR_SCREEN << logo << std::endl;
-
-    unsigned input = getNumberInput(logo, 0, 1ul);
+void UserInterface::startMenu() {
+    unsigned input = getUnsignedInput("(1) Plan\n"
+                                      "(0) Exit\n\n",
+                                      0, 1);
 
     switch (input) {
     case 0:
-        show(EXIT);
+        currentMenu = EXIT;
         break;
     case 1:
-        show(DEPARTURE);
+        currentMenu = DEPARTURE;
         break;
     }
 }
 
-unsigned long Menu::getNumberInput(std::string prompt, unsigned long min,
-                                   unsigned long max) {
+void UserInterface::optionsMenu(
+    const std::string &text,
+    const std::vector<std::pair<std::string, Menu>> &options) {
+    std::cout << CLEAR_SCREEN << text << "\n\n";
+
+    for (int i{1}; i < options.size(); ++i) {
+        std::cout << "(" << i << ") " << options.at(i).first << std::endl;
+    }
+
+    std::cout << "(0) " << options.front().first << "\n\n";
+
+    unsigned option = getUnsignedInput("Please insert option: ");
+
+    if (option < options.size())
+        currentMenu = options.at(option).second;
+    else
+        errorMessage = "Invalid option!\n";
+}
+
+unsigned long UserInterface::getUnsignedInput(std::string prompt,
+                                              unsigned long min,
+                                              unsigned long max) {
     std::string input;
     unsigned long number;
     bool done = false;
 
     do {
-        input = getInput(prompt);
+        input = getStringInput(prompt);
 
         try {
             number = stoul(input);
             done = true;
         } catch (std::invalid_argument) {
-            std::cout << "Invalid input!" << std::endl;
+            errorMessage = "Invalid input!\n";
+            done = false;
         }
     } while (!done || !inRange(number, min, max));
 
     return number;
 }
 
-double Menu::getNumberInput(std::string prompt, double min, double max) {
+double UserInterface::getDoubleInput(std::string prompt, double min,
+                                     double max) {
     std::string input;
     double number;
     bool done = false;
 
     do {
-        input = getInput(prompt);
+        input = getStringInput(prompt);
 
         try {
             number = stod(input);
             done = true;
         } catch (std::invalid_argument) {
-            std::cout << "Invalid input!" << std::endl;
+            errorMessage = "Invalid input!\n";
+            done = false;
         }
     } while (!done || !inRange(number, min, max));
 
     return number;
 }
 
-std::string Menu::getInput(std::string prompt) {
+std::string UserInterface::getStringInput(std::string prompt) {
+    std::cout << RED_TEXT << errorMessage << RESET_FORMATTING << prompt;
+    errorMessage = "";
 
     std::string input{};
 
@@ -106,39 +100,42 @@ std::string Menu::getInput(std::string prompt) {
     return input;
 }
 
-void Menu::exit() {
+void UserInterface::exit() {
     std::cout << CLEAR_SCREEN << std::flush;
     std::cout << "Shutting down..." << std::endl;
 }
 
-bool Menu::inRange(unsigned long n, unsigned long min, unsigned long max) {
+bool UserInterface::inRange(unsigned long n, unsigned long min,
+                            unsigned long max) {
     bool b = (n <= max) && (n >= min);
 
     if (!b)
-        std::cout << "Value outside allowed range!" << std::endl;
+        errorMessage = "Value outside allowed range!\n";
 
     return b;
 }
 
-bool Menu::inRange(double n, double min, double max) {
+bool UserInterface::inRange(double n, double min, double max) {
     bool b = (n <= max) && (n >= min);
 
     if (!b)
-        std::cout << "Value outside allowed range!" << std::endl;
+        errorMessage = "Value outside allowed range!\n";
 
     return b;
 }
 
-void Menu::show(State state) {
-    switch (state) {
+void UserInterface::show(Graph &graph) {
+    std::cout << CLEAR_SCREEN << PROGRAM_NAME << '\n' << std::endl;
+
+    switch (currentMenu) {
     case START:
         startMenu();
         break;
     case DEPARTURE:
-        departureMenu();
+        departureMenu(graph);
         break;
     case DESTINATION:
-        destinationMenu();
+        destinationMenu(graph);
         break;
     case WALK:
         walkMenu();
@@ -150,7 +147,7 @@ void Menu::show(State state) {
         nightMenu();
         break;
     case PLAN:
-        planMenu();
+        planMenu(graph);
         break;
     case EXIT:
         throw Exit();
@@ -158,130 +155,96 @@ void Menu::show(State state) {
     }
 }
 
-void Menu::departureMenu() {
-    std::cout << CLEAR_SCREEN << std::flush;
-    std::string opts = "Enter departure by:\n\n"
-                       "1 - Coordinates\n"
-                       "2 - Stop\n"
-                       "0 - Return";
-
-    std::cout << opts << std::endl;
-
-    unsigned opt = getNumberInput(opts, 0, 2ul);
-
-    std::string prompt{""};
-    int pos{};
+void UserInterface::departureMenu(Graph &graph) {
+    unsigned opt = getUnsignedInput("(1) Coordinates\n"
+                                    "(2) Stop\n"
+                                    "(0) Go back\n\n"
+                                    "Enter departure by: ",
+                                    0, 2);
 
     switch (opt) {
     case 1: {
-        prompt = "Insert your latitude value: ";
-        std::cout << prompt << std::endl;
-        double depLatitude = getNumberInput(prompt, -90., 90.);
+        double depLatitude =
+            getDoubleInput("Insert your latitude value: ", -90., 90.);
 
-        prompt = "Insert your longitude value: ";
-        std::cout << prompt << std::endl;
-        double depLongitude = getNumberInput(opts, -180., 180.);
+        double depLongitude =
+            getDoubleInput("Insert your longitude value: ", -180., 180.);
 
         graph.setStart(depLatitude, depLongitude);
         startCode = "START";
         break;
-        // TODO: calculate stop code here?
     }
-    case 2: {
-        prompt = "Insert the departure's stop code: ";
-        std::cout << prompt;
-        this->startCode = getInput(prompt);
+    case 2:
+        startCode = getStringInput("Insert the departure's stop code: ");
         break;
-    }
     case 0:
-        show(START);
+        currentMenu = START;
         return;
     }
 
-    show(DESTINATION);
+    currentMenu = DESTINATION;
 }
 
-void Menu::destinationMenu() {
-    std::cout << CLEAR_SCREEN << std::flush;
-    std::string opts = "Enter destination by:\n\n"
-                       "1 - Coordinates\n"
-                       "2 - Stop\n"
-                       "0 - Return";
-
-    std::cout << opts << std::endl;
-
-    unsigned opt = getNumberInput(opts, 0, 2ul);
-
-    std::string prompt{""};
+void UserInterface::destinationMenu(Graph &graph) {
+    unsigned opt = getUnsignedInput("(1) Coordinates\n"
+                                    "(2) Stop\n"
+                                    "(0) Go back\n\n"
+                                    "Enter departure by: ",
+                                    0, 2);
 
     switch (opt) {
     case 1: {
-        prompt = "Insert the destination's latitude value: ";
-        std::cout << prompt << std::endl;
-        double destLatitude = getNumberInput(prompt, -90., 90.);
+        double destLatitude = getDoubleInput(
+            "Insert the destination's latitude value: ", -90., 90.);
 
-        prompt = "Insert the destination's longitude value: ";
-        std::cout << prompt << std::endl;
-        double destLongitude = getNumberInput(opts, -180., 180.);
+        double destLongitude = getDoubleInput(
+            "Insert the destination's longitude value: ", -180., 180.);
 
         graph.setEnd(destLatitude, destLongitude);
         endCode = "END";
-
         break;
     }
-    case 2: {
-        prompt = "Insert the destination's stop code: ";
-        std::cout << prompt;
-        this->endCode = getInput(prompt);
+    case 2:
+        endCode = getStringInput("Insert the destination's stop code: ");
         break;
-    }
     case 0:
-        show(START);
+        currentMenu = START;
         return;
     }
 
-    show(WALK);
+    currentMenu = WALK;
 }
 
-void Menu::walkMenu() {
-    std::cout << CLEAR_SCREEN << std::flush;
-    std::string prompt = "Insert a distance you'd be comfortable walking (m): ";
-    std::cout << prompt << std::flush;
+void UserInterface::walkMenu() {
+    walk = getDoubleInput(
+        "Insert a distance you'd be comfortable walking (m): ", 0);
 
-    walk = getNumberInput(prompt);
-
-    show(NIGHT);
+    currentMenu = NIGHT;
 }
 
-void Menu::nightMenu() {
-    std::cout << CLEAR_SCREEN << std::flush;
-    std::string prompt = "Will you be travelling at night (N/y): ";
-    std::cout << prompt << std::flush;
-
-    std::string opt = getInput(prompt);
+void UserInterface::nightMenu() {
+    std::string opt = getStringInput("Will you be travelling at night (N/y): ");
 
     if (opt == "Y" || opt == "y")
         night = true;
 
-    show(SELECTION);
+    currentMenu = SELECTION;
 }
 
-void Menu::selectionMenu() {
-    std::cout << CLEAR_SCREEN << std::flush;
-    std::string prompt = "Choose how you'd like to plan your trip: \n\n"
-                         "1 - Minimize cost\n"
-                         "2 - Minimize bus changes\n"
-                         "3 - Minimize distance\n"
-                         "4 - Minimize stops\n";
-
-    int opt = getNumberInput(prompt, 1, 4ul);
+void UserInterface::selectionMenu() {
+    int opt = getUnsignedInput("(1) Minimize cost\n"
+                               "(2) Minimize bus changes\n"
+                               "(3) Minimize distance\n"
+                               "(4) Minimize stops\n\n"
+                               "Choose how you'd like to plan your trip: ",
+                               1, 4);
 
     option = (Option)(opt - 1);
 
-    show(PLAN);
+    currentMenu = PLAN;
 }
 
-void Menu::planMenu() {
+void UserInterface::planMenu(Graph &graph) {
     filter f =
         compositeFilter({walkingFilter(walk), nightFilter(!night, true)});
 
@@ -306,11 +269,12 @@ void Menu::planMenu() {
         path = graph.bfsPath(startCode, endCode, f);
         break;
     }
-    // TODO: calculations and all of the algorithms
 
     for (const Node &node : path)
         std::cout << node.stop.getCode() << "\t- " << node.line << "\t- "
                   << node.stop.getName() << std::endl;
 
-    getInput("");
+    getStringInput("\nPress Enter to continue...\n");
+
+    currentMenu = START;
 }

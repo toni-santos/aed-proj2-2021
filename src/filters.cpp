@@ -1,8 +1,9 @@
 #include "../includes/filters.h"
+#include "../includes/constants.h"
 
 filter walkingFilter(const double &maxWalkDistance) {
     return [=](const Node &src, const Node &dest, const Edge &edge) -> bool {
-        return !(edge.code == "A PE" && edge.distance > maxWalkDistance);
+        return !(edge.code == BY_FOOT_LINE && edge.distance > maxWalkDistance);
     };
 }
 

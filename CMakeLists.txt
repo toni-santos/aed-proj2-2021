@@ -7,23 +7,24 @@ set(CMAKE_CXX_STANDARD 17)
 
 add_executable(aed_proj2_2021 
                src/main.cpp 
-               src/graph.cpp 
                src/filters.cpp
+               src/graph.cpp 
                src/Menu.cpp
-               src/Stop.cpp 
                src/Utils.cpp)
 
 add_executable(aed_proj2_2021_no_ansi
                 src/main.cpp 
-                src/graph.cpp 
                 src/filters.cpp
+                src/graph.cpp 
                 src/Menu.cpp
-                src/Stop.cpp 
                 src/Utils.cpp)
 target_compile_definitions(aed_proj2_2021_no_ansi PUBLIC NO_ANSI)
 
 include_directories(aed_proj2_2021 includes/)
 include_directories(aed_proj2_2021_no_ansi includes/)
+
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/dataset
+     DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 # Doxygen Build
 find_package(Doxygen)

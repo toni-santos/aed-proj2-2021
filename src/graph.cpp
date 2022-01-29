@@ -6,13 +6,6 @@
 #include "../includes/constants.h"
 #include "../includes/graph.h"
 
-// Constructor: nr nodes and direction (default: undirected)
-Graph::Graph(int num, bool dir) : n(num), hasDir(dir), nodes(num) {
-    readStops();
-    readLines();
-    addFootEdges();
-}
-
 void Graph::addFootEdges() {
     for (auto i{nodes.begin()}, end{nodes.end()}; i != end; ++i) {
         for (auto j{i}; j != end; ++j) {
@@ -23,34 +16,34 @@ void Graph::addFootEdges() {
                 i->second.stop.getLatitude(), i->second.stop.getLongitude(),
                 j->second.stop.getLatitude(), j->second.stop.getLongitude());
 
-            addEdge(i->second, j->second, "A PE", distance);
-            addEdge(j->second, i->second, "A PE", distance);
+            addEdge(i->second, j->second, BY_FOOT_LINE, distance);
+            addEdge(j->second, i->second, BY_FOOT_LINE, distance);
         }
     }
 }
 
 void Graph::setStart(const double &lat, const double &lon) {
-    nodes["START"] = Node(Stop("Start", "START", "", lat, lon));
+    nodes[START_NODE] = Node(Stop(START_NODE_NAME, START_NODE, "", lat, lon));
 
     for (auto i{nodes.begin()}, end{nodes.end()}; i != end; ++i) {
         double distance = haversine(i->second.stop.getLatitude(),
                                     i->second.stop.getLongitude(), lat, lon);
 
-        addEdge("START", i->first, "A PE", distance);
+        addEdge(START_NODE, i->first, BY_FOOT_LINE, distance);
     }
 }
 
 void Graph::setEnd(const double &lat, const double &lon) {
-    nodes["END"] = Node(Stop("End", "END", "", lat, lon));
+    nodes[END_NODE] = Node(Stop(END_NODE_NAME, END_NODE, "", lat, lon));
 
     for (auto i{nodes.begin()}, end{nodes.end()}; i != end; ++i) {
         double distance = haversine(i->second.stop.getLatitude(),
                                     i->second.stop.getLongitude(), lat, lon);
 
-        if (i->second.adj.back().dest == "END")
+        if (i->second.adj.back().dest == END_NODE)
             i->second.adj.pop_back();
 
-        addEdge(i->first, "END", "A PE", distance);
+        addEdge(i->first, END_NODE, BY_FOOT_LINE, distance);
     }
 }
 
@@ -58,8 +51,6 @@ void Graph::setEnd(const double &lat, const double &lon) {
 void Graph::addEdge(Node &src, Node &dest, const std::string &code,
                     const double &distance) {
     src.adj.push_back({dest.stop.getCode(), distance, code});
-    if (!hasDir)
-        dest.adj.push_back({src.stop.getCode(), distance, code});
 }
 
 // Add edge from source to destination with a certain weight
@@ -87,7 +78,7 @@ void Graph::readStops() {
         parsedLine = split(line, ',');
 
         Stop stop = Stop(parsedLine.at(1), parsedLine.at(0), parsedLine.at(2),
-                         stod(parsedLine.at(4)), stod(parsedLine.at(3)));
+                         stod(parsedLine.at(3)), stod(parsedLine.at(4)));
         Node node{stop};
         nodes.emplace(stop.getCode(), node);
     }
@@ -134,11 +125,12 @@ void Graph::readLines() {
 void Graph::populate() {
     readStops();
     readLines();
+    addFootEdges();
 }
 
 void Graph::dijkstra(const std::string &src, const std::string &dest,
                      const filter &f) {
-    MinHeap<std::string, double> q(n, "");
+    MinHeap<std::string, double> q(nodes.size(), "");
 
     for (auto i{nodes.begin()}, end{nodes.end()}; i != end; ++i) {
         i->second.dist = INF;
@@ -153,7 +145,6 @@ void Graph::dijkstra(const std::string &src, const std::string &dest,
     while (q.getSize() > 0) {
         std::string uc = q.removeMin();
         Node &u = getNode(uc);
-        std::cout << "Node " << uc << " with dist = " << u.dist << std::endl;
         u.visited = true;
 
         if (uc == dest)
@@ -164,7 +155,7 @@ void Graph::dijkstra(const std::string &src, const std::string &dest,
             Node &v = getNode(vc);
             double w = u.dist + e.distance;
 
-            if (!f(u, v, e)) // descriptive variables :D
+            if (!f(u, v, e))
                 continue;
 
             if (!v.visited && w < v.dist) {
@@ -179,7 +170,7 @@ void Graph::dijkstra(const std::string &src, const std::string &dest,
 
 void Graph::dijkstraCost(const std::string &src, const std::string &dest,
                          const filter &f) {
-    MinHeap<std::string, double> q(n, "");
+    MinHeap<std::string, double> q(nodes.size(), "");
 
     for (auto i{nodes.begin()}, end{nodes.end()}; i != end; ++i) {
         i->second.dist = INF;
@@ -194,7 +185,6 @@ void Graph::dijkstraCost(const std::string &src, const std::string &dest,
     while (q.getSize() > 0) {
         std::string uc = q.removeMin();
         Node &u = getNode(uc);
-        // cout << "Node " << u << " with dist = " << nodes[u].dist << endl;
         u.visited = true;
         for (auto e : u.adj) {
             std::string vc = e.dest;
@@ -218,7 +208,7 @@ void Graph::dijkstraCost(const std::string &src, const std::string &dest,
 
 void Graph::dijkstraLines(const std::string &src, const std::string &dest,
                           const filter &f) {
-    MinHeap<std::string, double> q(n, "");
+    MinHeap<std::string, double> q(nodes.size(), "");
 
     for (auto i{nodes.begin()}, end{nodes.end()}; i != end; ++i) {
         i->second.dist = INF;
@@ -240,7 +230,7 @@ void Graph::dijkstraLines(const std::string &src, const std::string &dest,
             std::string vc = e.dest;
             Node &v = getNode(vc);
 
-            if (!f(u, v, e)) // descriptive variables :D
+            if (!f(u, v, e))
                 continue;
 
             double w = u.dist + e.distance + (v.line != u.line) * 1000;
@@ -326,7 +316,7 @@ void Graph::bfs(const std::string &src, const std::string &dest,
         for (auto e : nodes[u].adj) {
             std::string w = e.dest;
 
-            if (!f(nodes[u], nodes[w], e)) // descriptive variables :D
+            if (!f(nodes[u], nodes[w], e))
                 continue;
 
             if (!nodes[w].visited) {

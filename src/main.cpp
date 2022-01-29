@@ -4,7 +4,10 @@
 #include <iostream>
 
 int main() {
-    Graph graph(2571, true);
+    Graph graph{};
+    UserInterface ui{};
+
+    std::cout << "Loading..." << std::endl;
 
     try {
         graph.populate();
@@ -13,14 +16,12 @@ int main() {
         return 1;
     }
 
-    Menu menu = Menu(graph);
-
     try {
         while (true) {
-            menu.show(START);
+            ui.show(graph);
         }
     } catch (Exit) {
-        menu.exit();
+        ui.exit();
     }
 
     return 0;
