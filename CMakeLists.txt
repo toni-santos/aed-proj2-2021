@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD 17)
 add_executable(aed_proj2_2021 
                src/main.cpp 
                src/graph.cpp 
+               src/filters.cpp
                src/Menu.cpp
                src/Stop.cpp 
                src/Utils.cpp)
@@ -15,6 +16,7 @@ add_executable(aed_proj2_2021
 add_executable(aed_proj2_2021_no_ansi
                 src/main.cpp 
                 src/graph.cpp 
+                src/filters.cpp
                 src/Menu.cpp
                 src/Stop.cpp 
                 src/Utils.cpp)

@@ -12,8 +12,9 @@ class Stop {
 public:
     Stop() : name(""), code(""), zone(""), latitude(0), longitude(0){};
 
-    Stop(std::string name, std::string code, std::string zone, double longitude,
-         double latitude)
+    Stop(const std::string &name, const std::string &code,
+         const std::string &zone, const double &longitude,
+         const double &latitude)
         : name(name), code(code), zone(zone), longitude(longitude),
           latitude(latitude){};
 

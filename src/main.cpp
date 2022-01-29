@@ -4,7 +4,7 @@
 #include <iostream>
 
 int main() {
-    Graph graph(2487, true);
+    Graph graph(2571, true);
 
     try {
         graph.populate();
