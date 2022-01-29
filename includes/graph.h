@@ -121,7 +121,7 @@ public:
      * @brief Adds a new edge between two nodes with the specified distance and
      *        code.
      *
-     * @param src The code of source node.
+     * @param src The code of the source node.
      * @param dest The code of the destination node.
      * @param code The line code.
      * @param distance The distance between the nodes.
@@ -176,24 +176,88 @@ public:
      */
     void populate();
 
+    /**
+     * @brief Applies the regular dijkstra algorithm.
+     *
+     * @param src The code of the source node.
+     * @param dest The code of the destination node.
+     * @param f The filter to use in the creation of the path.
+     */
     void dijkstra(const std::string &src, const std::string &dest,
                   const filter &f);
+
+    /**
+     * @brief Calls dijkstra() to calculate and return the shortest path.
+     *
+     * @param src The code of the source node.
+     * @param dest The code of the destination node.
+     * @param f The filter to use in the creation of the path.
+     * @return A list of nodes that represent the optimal path given the imposed restrictions.
+     */
     std::list<Node> dijkstraPath(const std::string &src,
                                  const std::string &dest, const filter &f);
 
+    /**
+     * @brief Applies a variant of the dijkstra algorithm that inflates the distance to nodes of different zones.
+     *
+     * @param src The code of the source node.
+     * @param dest The code of the destination node.
+     * @param f The filter to use in the creation of the path.
+     */
     void dijkstraCost(const std::string &src, const std::string &dest,
                       const filter &f);
+
+    /**
+     * @brief Calls dijkstraCost() to calculate and return the cheapest path.
+     *
+     * @param src The code of the source node.
+     * @param dest The code of the destination node.
+     * @param f The filter to use in the creation of the path.
+     * @return A list of nodes that represent the optimal path given the imposed restrictions.
+     */
     std::list<Node> dijkstraCostPath(const std::string &src,
                                      const std::string &dest, const filter &f);
 
+    /**
+     * @brief Applies a variant of the dijkstra algorithm that inflates the distance to nodes of different lines.
+     *
+     * @param src The code of the source node.
+     * @param dest The code of the destination node.
+     * @param f The filter to use in the creation of the path.
+     */
     void dijkstraLines(const std::string &src, const std::string &dest,
                        const filter &f);
-    std::list<Node> dijkstraLinesPath(const std::string &src,
-                                      const std::string &dest, const filter &f);
 
+    /**
+     * @brief Calls dijkstraLines() to calculate and return the path with the least amount of line changes.
+     *
+     * @param src The code of the source node.
+     * @param dest The code of the destination node.
+     * @param f The filter to use in the creation of the path.
+     * @return A list of nodes that represent the optimal path given the imposed restrictions.
+     */
+    std::list<Node> dijkstraLinesPath(const std::string &src,
+                                  const std::string &dest, const filter &f);
+
+     /**
+      * @brief Applies the bfs (breadth-first search) algorithm.
+      *
+      * @param src The code of the source node.
+      * @param dest The code of the destination node.
+      * @param f The filter to use in the creation of the path.
+      */
     void bfs(const std::string &src, const std::string &dest, const filter &f);
+
+    /**
+    * @brief Calls bfs() to calculate and return the path with the least amount of stops.
+    *
+    * @param src The code of the source node.
+    * @param dest The code of the destination node.
+    * @param f The filter to use in the creation of the path.
+    * @return A list of nodes that represent the optimal path given the imposed restrictions.
+    */
     std::list<Node> bfsPath(const std::string &src, const std::string &dest,
-                            const filter &f);
+                    const filter &f);
 };
 
 #endif

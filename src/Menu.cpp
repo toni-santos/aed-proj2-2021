@@ -326,7 +326,7 @@ void UserInterface::planMenu(Graph &graph, Trip &trip) {
         break;
 
     case MIN_STOPS:
-        // stop changes (dfs)
+        // stop changes (bfs)
         path = graph.bfsPath(trip.getSource(), trip.getDestination(),
                              trip.getFilter());
         break;
