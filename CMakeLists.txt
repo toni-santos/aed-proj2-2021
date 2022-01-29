@@ -3,7 +3,7 @@ project(aed_proj2_2021
         VERSION 1.0
         LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 add_executable(aed_proj2_2021 
                src/main.cpp 

@@ -313,6 +313,9 @@ void Graph::bfs(const std::string &src, const std::string &dest,
         std::string u = q.front();
         q.pop();
 
+        if (u == dest)
+            return;
+
         for (auto e : nodes[u].adj) {
             std::string w = e.dest;
 

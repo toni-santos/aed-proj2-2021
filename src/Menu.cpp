@@ -293,6 +293,17 @@ void UserInterface::toggleStopsMenu(Trip &trip) {
 }
 
 void UserInterface::planMenu(Graph &graph, Trip &trip) {
+    if (!trip.hasDestination() || !trip.hasSource()) {
+        currentMenu = MAIN;
+        errorMessage = "Starting point or destination point not set!\n";
+        return;
+    } else if (!graph.getNodes().contains(trip.getDestination()) ||
+               !graph.getNodes().contains(trip.getSource())) {
+        currentMenu = MAIN;
+        errorMessage = "Starting point or destination point do not exist!\n";
+        return;
+    }
+
     std::list<Node> path{};
 
     switch (trip.getStrategy()) {
@@ -321,9 +332,12 @@ void UserInterface::planMenu(Graph &graph, Trip &trip) {
         break;
     }
 
-    for (const Node &node : path)
-        std::cout << node.stop.getCode() << "\t- " << node.line << "\t- "
-                  << node.stop.getName() << std::endl;
+    if (path.size())
+        for (const Node &node : path)
+            std::cout << node.stop.getCode() << "\t- " << node.line << "\t- "
+                      << node.stop.getName() << std::endl;
+    else
+        std::cout << "No path found between those points...\n";
 
     getStringInput("\nPress Enter to continue...\n");
 
