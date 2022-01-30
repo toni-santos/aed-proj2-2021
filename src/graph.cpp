@@ -87,8 +87,8 @@ void Graph::readStops() {
 }
 
 void Graph::readLines() {
-    for (auto &file : std::filesystem::directory_iterator{LINE_FOLDER_PATH}) {
-        std::ifstream f{file.path()};
+    for (auto &file: std::filesystem::directory_iterator{LINE_FOLDER_PATH}) {
+        std::ifstream f{file.path().string()};
 
         std::string lineCode = split(file.path().generic_string(), '_').at(1);
 

@@ -177,7 +177,7 @@ public:
     void populate();
 
     /**
-     * @brief Applies the regular dijkstra algorithm.
+     * @brief Applies the regular dijkstra algorithm. [O(|V| log(|E|))]
      *
      * @param src The code of the source node.
      * @param dest The code of the destination node.
@@ -198,7 +198,7 @@ public:
                                  const std::string &dest, const filter &f);
 
     /**
-     * @brief Applies a variant of the dijkstra algorithm that inflates the distance to nodes of different zones.
+     * @brief Applies a variant of the dijkstra algorithm that inflates the distance to nodes of different zones. [O(|V| log(|E|))]
      *
      * @param src The code of the source node.
      * @param dest The code of the destination node.
@@ -219,7 +219,7 @@ public:
                                      const std::string &dest, const filter &f);
 
     /**
-     * @brief Applies a variant of the dijkstra algorithm that inflates the distance to nodes of different lines.
+     * @brief Applies a variant of the dijkstra algorithm that inflates the distance to nodes of different lines. [O(|V| log(|E|))]
      *
      * @param src The code of the source node.
      * @param dest The code of the destination node.
@@ -240,7 +240,7 @@ public:
                                   const std::string &dest, const filter &f);
 
      /**
-      * @brief Applies the bfs (breadth-first search) algorithm.
+      * @brief Applies the bfs (breadth-first search) algorithm. [O(|V| + |E|)]
       *
       * @param src The code of the source node.
       * @param dest The code of the destination node.
